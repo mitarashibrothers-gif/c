@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>アルティメットクリッカー</title>
+
+<style>
+
+body{
+background:#0f0f0f;
+color:white;
+font-family:sans-serif;
+text-align:center;
+}
+
+h1{
+font-size:40px;
+}
+
+#money{
+font-size:60px;
+margin:20px;
+}
+
+button{
+font-size:18px;
+padding:10px 20px;
+margin:5px;
+border:none;
+border-radius:10px;
+background:orange;
+cursor:pointer;
+}
+
+button:hover{
+background:red;
+}
+
+#icon{
+width:120px;
+margin:20px;
+}
+
+#inventory img{
+width:60px;
+margin:6px;
+cursor:pointer;
+border-radius:10px;
+}
+
+.shopItem{
+background:#222;
+padding:10px;
+margin:6px;
+border-radius:10px;
+}
+
+.N{color:white}
+.R{color:cyan}
+.SR{color:magenta}
+.SSR{color:orange}
+.UR{color:red;font-weight:bold}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>🔥アルティメットクリッカー🔥</h1>
+
+<h2>コイン</h2>
+<div id="money">0</div>
+
+<img id="icon" src="https://cdn-icons-png.flaticon.com/512/616/616408.png">
+
+<br>
+
+<button onclick="clickCoin()">クリック！</button>
+
+<hr>
+
+<h2>🛒 ショップ</h2>
+<div id="shop"></div>
+
+<hr>
+
+<h2>🎲 ガチャ (200コイン)</h2>
+
+<button onclick="gacha()">ガチャを引く</button>
+
+<div id="result"></div>
+
+<hr>
+
+<h2>🎒 アイコン</h2>
+
+<div id="inventory"></div>
+
+<hr>
+
+<button onclick="resetGame()">データリセット</button>
+
+<script>
+
+let money=0
+let clickPower=1
+let autoPower=0
+
+let inventory=[]
+
+const icons=[
+
+{name:"ネコ",url:"https://cdn-icons-png.flaticon.com/512/616/616408.png",rate:40,rarity:"N"},
+
+{name:"犬",url:"https://cdn-icons-png.flaticon.com/512/616/616430.png",rate:30,rarity:"R"},
+
+{name:"ドラゴン",url:"https://cdn-icons-png.flaticon.com/512/616/616554.png",rate:15,rarity:"SR"},
+
+{name:"王冠",url:"https://cdn-icons-png.flaticon.com/512/616/616490.png",rate:10,rarity:"SSR"},
+
+{name:"神",url:"https://cdn-icons-png.flaticon.com/512/616/616494.png",rate:5,rarity:"UR"}
+
+]
+
+const shop=[
+
+{name:"クリック強化",cost:50,action:()=>{clickPower++}},
+
+{name:"クリック強化Ⅱ",cost:200,action:()=>{clickPower+=5}},
+
+{name:"オートクリック",cost:150,action:()=>{autoPower++}},
+
+{name:"高速オート",cost:800,action:()=>{autoPower+=5}}
+
+]
+
+function clickCoin(){
+
+money+=clickPower
+
+update()
+
+}
+
+function gacha(){
+
+if(money<200){
+
+alert("コインが足りません")
+
+return
+
+}
+
+money-=200
+
+let r=Math.random()*100
+let sum=0
+
+for(let item of icons){
+
+sum+=item.rate
+
+if(r<=sum){
+
+inventory.push(item)
+
+showResult(item)
+
+updateInventory()
+
+break
+
+}
+
+}
+
+update()
+
+}
+
+function showResult(item){
+
+let text=item.name+" GET!"
+
+if(item.rarity=="R") text="<span class='R'>"+text+"</span>"
+if(item.rarity=="SR") text="<span class='SR'>"+text+"</span>"
+if(item.rarity=="SSR") text="<span class='SSR'>"+text+"</span>"
+if(item.rarity=="UR") text="<span class='UR'>"+text+"</span>"
+
+document.getElementById("result").innerHTML=text
+
+}
+
+function update(){
+
+document.getElementById("money").innerText=Math.floor(money)
+
+save()
+
+}
+
+function updateInventory(){
+
+let div=document.getElementById("inventory")
+
+div.innerHTML=""
+
+inventory.forEach(item=>{
+
+let img=document.createElement("img")
+
+img.src=item.url
+
+img.onclick=()=>{
+
+document.getElementById("icon").src=item.url
+
+}
+
+div.appendChild(img)
+
+})
+
+save()
+
+}
+
+function createShop(){
+
+let s=document.getElementById("shop")
+
+s.innerHTML=""
+
+shop.forEach(item=>{
+
+let div=document.createElement("div")
+
+div.className="shopItem"
+
+let btn=document.createElement("button")
+
+btn.innerText=item.name+" ("+item.cost+")"
+
+btn.onclick=()=>{
+
+if(money>=item.cost){
+
+money-=item.cost
+
+item.action()
+
+update()
+
+}
+
+}
+
+div.appendChild(btn)
+
+s.appendChild(div)
+
+})
+
+}
+
+function autoLoop(){
+
+money+=autoPower
+
+update()
+
+}
+
+setInterval(autoLoop,1000)
+
+function save(){
+
+localStorage.setItem("money",money)
+localStorage.setItem("inventory",JSON.stringify(inventory))
+localStorage.setItem("clickPower",clickPower)
+localStorage.setItem("autoPower",autoPower)
+
+}
+
+function load(){
+
+money=Number(localStorage.getItem("money"))||0
+inventory=JSON.parse(localStorage.getItem("inventory"))||[]
+clickPower=Number(localStorage.getItem("clickPower"))||1
+autoPower=Number(localStorage.getItem("autoPower"))||0
+
+update()
+updateInventory()
+
+}
+
+function resetGame(){
+
+if(confirm("本当にリセットしますか？")){
+
+localStorage.clear()
+
+location.reload()
+
+}
+
+}
+
+createShop()
+load()
+
+</script>
+
+</body>
+</html>
